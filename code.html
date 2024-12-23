@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>code</title>
+    <style type="text/css">
+body {
+  background-color: #fcf1dc;
+}
+</style></head>
+  <body>
+    <p>#define NTF0 -1<br>
+      #define NTF1 350<br>
+      #define NTF2 385 <br>
+      #define NTF3 441<br>
+      #define NTF4 466<br>
+      #define NTF5 523<br>
+      #define NTF6 587<br>
+      #define NTF7 659<br>
+      <br>
+      #define NTFH1 700<br>
+      #define NTFH2 786<br>
+      #define NTFH3 882<br>
+      #define NTFH4 935<br>
+      #define NTFH5 1046<br>
+      #define NTFH6 1153<br>
+      #define NTFH7 1307<br>
+      <br>
+      #define NTFL1 175<br>
+      #define NTFL2 196<br>
+      #define NTFL3 221<br>
+      #define NTFL4 234<br>
+      #define NTFL5 262<br>
+      #define NTFL6 294<br>
+      #define NTFL7 330<br>
+      <br>
+      #define LEDR 5<br>
+      #define LEDG 6<br>
+      #define LEDB 7<br>
+      <br>
+      #define&nbsp;&nbsp; DirR&nbsp;&nbsp;&nbsp; 12<br>
+      #define&nbsp;&nbsp; DirL&nbsp;&nbsp;&nbsp; 11<br>
+      #define&nbsp;&nbsp; PwmL&nbsp;&nbsp; 9<br>
+      #define&nbsp;&nbsp; PwmR&nbsp; 10<br>
+      <br>
+      int val;<br>
+      int y = 0;<br>
+      int inB,inB2;<br>
+      int mode;<br>
+      int micin = 0;<br>
+      int diff;<br>
+      int vmax=0;<br>
+      int vmin=1023;<br>
+      int irin;<br>
+      bool t = false;<br>
+      <br>
+      void turnoff(){<br>
+      &nbsp; digitalWrite(LEDR, LOW);<br>
+      &nbsp; digitalWrite(LEDG, LOW);<br>
+      &nbsp; digitalWrite(LEDB, LOW);<br>
+      }<br>
+      <br>
+      void cM(int dL,int dR,int sL,int sR){<br>
+      &nbsp; digitalWrite(DirL,dL);<br>
+      &nbsp; digitalWrite(DirR,dR);<br>
+      &nbsp; analogWrite(PwmL,sL);<br>
+      &nbsp; analogWrite(PwmR,sR);<br>
+      }<br>
+      <br>
+      int buzzer_pin = 8;<br>
+      int length;<br>
+      <br>
+      int tune[]=<br>
+      {<br>
+      &nbsp; NTF3,NTF3,NTF3,NTF3,NTF3,NTF3,<br>
+      &nbsp; NTF3,NTF5,NTF1,NTF2,NTF3,NTF0,<br>
+      &nbsp; NTF4,NTF4,NTF4,NTF4,NTF4,NTF3,NTF3,NTF3,NTF3,<br>
+      &nbsp; NTF5,NTF5,NTF4,NTF2,NTF1,NTF0,<br>
+      <br>
+      &nbsp; NTFL5,NTF3,NTF2,NTF1,NTFL5,NTF0,NTFL5,NTFL5,<br>
+      &nbsp; NTFL5,NTF3,NTF2,NTF1,NTFL6,NTF0,<br>
+      &nbsp; NTFL6,NTF4,NTF3,NTF2,NTFL7,NTF0,<br>
+      &nbsp; NTF5,NTF5,NTF4,NTF2,NTF3,NTF1,NTF0,<br>
+      <br>
+      &nbsp; NTFL5,NTF3,NTF2,NTF1,NTFL5,NTF0,<br>
+      &nbsp; NTFL5,NTF3,NTF2,NTF1,NTFL6,NTF0,NTFL6,<br>
+      &nbsp; NTFL6,NTF4,NTF3,NTF2,NTF5,NTF5,NTF5,NTF5,<br>
+      &nbsp; NTF6,NTF5,NTF4,NTF2,NTF1,NTF0<br>
+      };<br>
+      float durt[]=<br>
+      {<br>
+      &nbsp; 0.5,0.5,1,0.5,0.5,1,<br>
+      &nbsp; 0.5,0.5,0.75,0.25,1.5,0.5,<br>
+      &nbsp; 0.5,0.5,1,0.5,0.5,0.5,0.5,0.25,0.25,<br>
+      &nbsp; 0.5,0.5,0.5,0.5,1.5,0.5,<br>
+      <br>
+      &nbsp; 0.5,0.5,0.5,0.5,1,0.5,0.25,0.25,<br>
+      &nbsp; 0.5,0.5,0.5,0.5,1,1,<br>
+      &nbsp; 0.5,0.5,0.5,0.5,1,1,<br>
+      &nbsp; 0.5,0.5,0.5,0.5,1,0.75,0.25,<br>
+      <br>
+      &nbsp; 0.5,0.5,0.5,0.5,1,1,<br>
+      &nbsp; 0.5,0.5,0.5,0.5,1,0.5,0.5,<br>
+      &nbsp; 0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,<br>
+      &nbsp; 0.5,0.5,0.5,0.5,0.75,0.25<br>
+      };<br>
+      <br>
+      char notes[] = "ggagCb ggagDC ggGECba FFECDC";<br>
+      unsigned long beats[] =
+      {1,1,2,2,2,2,2,1,1,2,2,2,2,2,1,1,2,2,2,2,2,1,1,2,2,2,2,2,2};<br>
+      int length_hb = sizeof(notes);<br>
+      int tempo = 300;<br>
+      void playNote(int OutputPin, char note, unsigned long duration) <br>
+      {<br>
+      &nbsp; char names[] = { 'c', 'd', 'e', 'f', 'g', 'a', 'b',
+      'C','D','E','F','G' };<br>
+      &nbsp; int tones[] = { 261, 294, 330, 349, 392, 440, 494,
+      523,587,659,698,784 };<br>
+      &nbsp; for (int i = 0; i &lt; 12; i++) <br>
+      &nbsp; {<br>
+      &nbsp;&nbsp;&nbsp; if (names[i] == note)<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tone(OutputPin,tones[i], duration);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delay(duration);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; noTone(OutputPin);<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp; }<br>
+      }<br>
+      <br>
+      void setup()<br>
+      {<br>
+      &nbsp; Serial.begin(115200);<br>
+      &nbsp; pinMode(buzzer_pin, OUTPUT);<br>
+      &nbsp; length = sizeof(tune)/sizeof(tune[0]);<br>
+      &nbsp; pinMode(LEDR, OUTPUT);<br>
+      &nbsp; pinMode(LEDG, OUTPUT);<br>
+      &nbsp; pinMode(LEDB, OUTPUT);<br>
+      &nbsp; turnoff();<br>
+      <br>
+      &nbsp; pinMode( DirL , OUTPUT);<br>
+      &nbsp; pinMode( DirR , OUTPUT);<br>
+      &nbsp; pinMode( PwmL , OUTPUT);<br>
+      &nbsp; pinMode( PwmR , OUTPUT);<br>
+      &nbsp; cM(HIGH,HIGH,0,0);<br>
+      }<br>
+      <br>
+      void loop()<br>
+      {&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; if (Serial.available() &gt; 0) inB = Serial.read();<br>
+      &nbsp;&nbsp;&nbsp; y = 0;<br>
+      &nbsp;&nbsp;&nbsp; t = false;<br>
+      &nbsp;&nbsp;&nbsp; while(inB=='9')<br>
+      &nbsp;&nbsp;&nbsp; { <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB2 = inB;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; turnoff();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; analogWrite(LEDR, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; analogWrite(LEDG, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; analogWrite(LEDB, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int x=0;x&lt;length;x++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tone(buzzer_pin, tune[x]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delay(500*durt[x]);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      noTone(buzzer_pin);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Serial.available() &gt; 0)
+      inB2 = Serial.read();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(inB != inB2) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB = inB2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      break;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      }&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      &nbsp;&nbsp;&nbsp; y = 0;<br>
+      &nbsp;&nbsp;&nbsp; t = false;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; while(inB == '6')<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB2 = inB;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; turnoff();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i = 0; i &lt; length_hb; i++) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Serial.available() &gt; 0)
+      inB2 = Serial.read();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(inB != inB2) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB = inB2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      break;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (notes[i] == ' ') <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int
+      i=0;i&lt;200;i++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; micin =
+      analogRead(A5);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&gt;vmax) vmax = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&lt;vmin) vmin = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delay(beats[i] *
+      tempo); // rest<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int
+      i=0;i&lt;200;i++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; micin =
+      analogRead(A5);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&gt;vmax) vmax = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&lt;vmin) vmin = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int
+      i=0;i&lt;200;i++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; micin =
+      analogRead(A5);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&gt;vmax) vmax = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&lt;vmin) vmin = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      playNote(buzzer_pin,notes[i], beats[i] * tempo);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int
+      i=0;i&lt;200;i++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; micin =
+      analogRead(A5);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&gt;vmax) vmax = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(micin&lt;vmin) vmin = micin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; diff = vmax - vmin;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(diff &gt; 500)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t =
+      true;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDR, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDG, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDB, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(!t == true)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDR, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDG, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDB, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(tempo/10);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t = false;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vmax=0;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vmin=1023;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; y = 0;<br>
+      &nbsp;&nbsp;&nbsp; t = false;<br>
+      &nbsp;&nbsp;&nbsp; while(inB == '7')<br>
+      &nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB2 = inB;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; turnoff();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Serial.available() &gt; 0) inB2 =
+      Serial.read();&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(inB != inB2) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB = inB2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cM(HIGH,HIGH,0,0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      break;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; irin = analogRead(A4);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(irin &lt; 700)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cM(HIGH,LOW,255,255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(HIGH,HIGH,255,255);&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; if(inB == '8'){<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB2 = inB;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while(true)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Serial.available() &gt; 0) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB =
+      Serial.read();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (inB=='0')<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      {cM(LOW,LOW,0,0); //停<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(200);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if
+      (inB=='1')<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {
+      cM(LOW,LOW,0,0); //停<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(200);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(HIGH,HIGH,255,255);//前進<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if
+      (inB=='2')<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(LOW,LOW,0,0); //停<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(200);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(LOW,LOW,255,255);//後退<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if
+      (inB=='3')<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {
+      cM(LOW,LOW,0,0); //停<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(200);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(HIGH,HIGH,0,255);//左<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if
+      (inB=='4') {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(LOW,LOW,0,0); //停<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(200);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(HIGH,HIGH,255,0);//右<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      cM(LOW,LOW,0,0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; while(inB == '5'){<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inB2 = inB;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; val=analogRead(A2);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(val&gt;800)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if
+      (Serial.available() &gt; 0) inB2 = Serial.read();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(inB
+      != inB2) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      inB = inB2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      break;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDR, 102);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDG, 50);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDB, 200);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /*turnoff();*/<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int
+      i=0;i&lt;150;i++)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if
+      (Serial.available() &gt; 0) inB2 = Serial.read();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(inB
+      != inB2) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      inB = inB2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      break;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      val=analogRead(A2);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Serial.println(val);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(val&gt;800) break;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDR, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDG, i);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDB, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(30);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int
+      i=149;i&gt;-1;i--)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if
+      (Serial.available() &gt; 0) inB2 = Serial.read();<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(inB
+      != inB2) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      inB = inB2;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      break;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      val=analogRead(A2);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Serial.println(val);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      if(val&gt;800) break;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDR, 255);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDG, i);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      analogWrite(LEDB, 0);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      delay(30);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      &nbsp;&nbsp;&nbsp; }&nbsp; <br>
+      }<br>
+    </p>
+  </body>
+</html>
